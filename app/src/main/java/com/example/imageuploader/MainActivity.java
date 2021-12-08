@@ -12,8 +12,12 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.Log;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResult;
@@ -24,6 +28,14 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.ml.vision.FirebaseVision;
+import com.google.firebase.ml.vision.common.FirebaseVisionImage;
+import com.google.firebase.ml.vision.text.FirebaseVisionText;
+import com.google.firebase.ml.vision.text.FirebaseVisionTextRecognizer;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
@@ -40,6 +52,8 @@ public class MainActivity extends AppCompatActivity {
     Button b1, b2;
     ImageView iv;
     Bitmap bitmap;
+    TextView tv;
+    WebView wv;
 
     public static final int REQUEST_ID_MULTIPLE_PERMISSIONS= 7;
 
@@ -52,6 +66,8 @@ public class MainActivity extends AppCompatActivity {
         b1 = findViewById(R.id.buttonFoto);
         b2 = findViewById(R.id.buttonUpload);
         iv = findViewById(R.id.imageView);
+        tv = findViewById(R.id.textId);
+        wv = findViewById(R.id.webView);
 
         b1.setOnClickListener(view -> {
             Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -76,6 +92,45 @@ public class MainActivity extends AppCompatActivity {
                         Bundle bundle = result.getData().getExtras();
                         bitmap = (Bitmap) bundle.get("data");
                         iv.setImageBitmap(bitmap);
+
+                        FirebaseVisionImage firebaseVisionImage = FirebaseVisionImage.fromBitmap(bitmap);
+                        FirebaseVision firebaseVision = FirebaseVision.getInstance();
+                        FirebaseVisionTextRecognizer firebaseVisionTextRecognizer = firebaseVision.getOnDeviceTextRecognizer();
+
+                        Task<FirebaseVisionText> task = firebaseVisionTextRecognizer.processImage(firebaseVisionImage);
+
+                        task.addOnSuccessListener(new OnSuccessListener<FirebaseVisionText>() {
+                            @Override
+                            public void onSuccess(FirebaseVisionText firebaseVisionText) {
+                                String s = firebaseVisionText.getText();
+                                String plat[] = s.split("\\r?\\n");
+
+                                tv.setText(plat[0]);
+
+                                wv.loadUrl("https://info.dipendajatim.go.id/index.php?page=info_pkb");
+                                WebSettings webSettings = wv.getSettings();
+                                webSettings.setJavaScriptEnabled(true);
+                                webSettings.setDomStorageEnabled(true);
+                                wv.setWebViewClient(new WebViewClient() {
+                                    public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                                        view.loadUrl(url);
+                                        return true;
+                                    }
+
+                                    public void onPageFinished(WebView view, String url) {
+                                        String nopol = plat[0];
+                                        view.loadUrl("javascript:(function() { document.getElementById('txtnopol').value = '" + nopol + "'; ;})()");
+                                        System.out.println("AUTOFILL");
+                                    }
+                                });
+                            }
+                        });
+                        task.addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                            }
+                        });
                     }
                 }
             }
