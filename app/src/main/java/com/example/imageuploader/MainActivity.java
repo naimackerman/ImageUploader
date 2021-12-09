@@ -107,22 +107,9 @@ public class MainActivity extends AppCompatActivity {
 
                                 tv.setText(plat[0]);
 
-                                wv.loadUrl("https://info.dipendajatim.go.id/index.php?page=info_pkb");
-                                WebSettings webSettings = wv.getSettings();
-                                webSettings.setJavaScriptEnabled(true);
-                                webSettings.setDomStorageEnabled(true);
-                                wv.setWebViewClient(new WebViewClient() {
-                                    public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                                        view.loadUrl(url);
-                                        return true;
-                                    }
+                                String nopol = plat[0];
 
-                                    public void onPageFinished(WebView view, String url) {
-                                        String nopol = plat[0];
-                                        view.loadUrl("javascript:(function() { document.getElementById('txtnopol').value = '" + nopol + "'; ;})()");
-                                        System.out.println("AUTOFILL");
-                                    }
-                                });
+                                wv.loadUrl("http://103.146.203.95/pajak/pkb.php?nopol=" + nopol);
                             }
                         });
                         task.addOnFailureListener(new OnFailureListener() {
