@@ -1,74 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+    <ImageView
+        android:id="@+id/image1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="-100dp"
+        android:src="@drawable/image2"></ImageView>
 
-        <ImageView
-            android:id="@+id/imageView"
-            android:layout_width="150dp"
-            android:layout_height="200dp"
-            android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="25dp"
-            android:src="@drawable/ic_baseline_photo_24" />
+    <Button
+        android:id="@+id/buttonGo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="350dp"
+        android:layout_centerHorizontal="true"
+        android:backgroundTint="@color/blue_1"
+        android:text="Cek Pajak Kendaraan"
+        android:textColor="@color/blue_4"
+        android:textStyle="bold"
+        app:icon="@drawable/ic_baseline_manage_search_24"
+        app:iconTint="@color/blue_4" />
 
-        <Button
-            android:id="@+id/buttonFoto"
-            android:layout_width="150dp"
-            android:layout_height="50dp"
-            android:layout_marginTop="5dp"
-            android:text="@string/ambil_foto"
-            android:backgroundTint="@color/cardview_dark_background"
-            android:layout_below="@+id/imageView"
-            android:layout_alignParentStart="true"
-            android:layout_marginHorizontal="20dp"/>
-
-        <Button
-            android:id="@+id/buttonUpload"
-            android:layout_width="150dp"
-            android:layout_height="50dp"
-            android:layout_marginTop="5dp"
-            android:text="@string/upload_foto"
-            android:backgroundTint="@color/black"
-            android:layout_toRightOf="@+id/buttonFoto"
-            android:layout_below="@+id/imageView"
-            android:layout_alignParentEnd="true"
-            android:layout_marginEnd="20dp"/>
-
-        <TextView
-            android:id="@+id/textLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:text="Hasil :"
-            android:textColor="@color/black"
-            android:layout_below="@+id/buttonUpload"
-            android:layout_centerHorizontal="true" />
-
-        <TextView
-            android:id="@+id/textId"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
-            android:text="Hasil"
-            android:background="@android:color/transparent"
-            android:layout_below="@+id/textLabel"
-            android:layout_centerHorizontal="true" />
-
-        <WebView
-            android:id="@+id/webView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginTop="5dp"
-            android:layout_below="@+id/textId" />
-
-    </RelativeLayout>
-
-</ScrollView>
+</RelativeLayout>

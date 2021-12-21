@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ImageUploader</string>
+    <string name="app_name">Cek Pajak Kendaraan</string>
     <string name="ambil_foto">Ambil Foto</string>
     <string name="upload_foto">Upload Foto</string>
 </resources>
