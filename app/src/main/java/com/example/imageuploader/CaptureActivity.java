@@ -1,28 +1,24 @@
 package com.example.imageuploader;
 
 import android.Manifest;
-import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.Log;
-import android.view.View;
 import android.webkit.WebView;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -39,6 +35,7 @@ import com.google.firebase.ml.vision.text.FirebaseVisionText;
 import com.google.firebase.ml.vision.text.FirebaseVisionTextRecognizer;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -50,7 +47,6 @@ import retrofit2.Response;
 
 public class CaptureActivity extends AppCompatActivity {
 
-    Button b1, b2;
     ImageView iv;
     Bitmap bitmap;
     TextView tv;
@@ -67,8 +63,6 @@ public class CaptureActivity extends AppCompatActivity {
         setContentView(R.layout.activity_capture);
         checkAndroidVersion();
 
-//        b1 = findViewById(R.id.buttonFoto);
-//        b2 = findViewById(R.id.buttonUpload);
         iv = findViewById(R.id.imageView);
         tv = findViewById(R.id.textId);
         wv = findViewById(R.id.webView);
@@ -79,7 +73,9 @@ public class CaptureActivity extends AppCompatActivity {
 
         floatingActionButton1.setOnClickListener(view -> {
             Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            launchActivity.launch(intent);
+            File file = new File(Environment.getExternalStorageDirectory()+ File.separator + "img.jpg");
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(file));
+            startActivityForResult(intent, 1);
         });
 
         floatingActionButton2.setOnClickListener(view -> {
@@ -92,59 +88,73 @@ public class CaptureActivity extends AppCompatActivity {
 
         floatingActionButton3.setOnClickListener(view -> finish());
 
-//        b1.setOnClickListener(view -> {
-//            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-//            launchActivity.launch(intent);
-//        });
-//
-//        b2.setOnClickListener(view -> {
-//            try {
-//                uploadToServer();
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//        });
     }
 
-    ActivityResultLauncher<Intent> launchActivity = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            new ActivityResultCallback<ActivityResult>() {
-                @Override
-                public void onActivityResult(ActivityResult result) {
-                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                        Bundle bundle = result.getData().getExtras();
-                        bitmap = (Bitmap) bundle.get("data");
-                        iv.setImageBitmap(bitmap);
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
 
-                        FirebaseVisionImage firebaseVisionImage = FirebaseVisionImage.fromBitmap(bitmap);
-                        FirebaseVision firebaseVision = FirebaseVision.getInstance();
-                        FirebaseVisionTextRecognizer firebaseVisionTextRecognizer = firebaseVision.getOnDeviceTextRecognizer();
-
-                        Task<FirebaseVisionText> task = firebaseVisionTextRecognizer.processImage(firebaseVisionImage);
-
-                        task.addOnSuccessListener(new OnSuccessListener<FirebaseVisionText>() {
-                            @Override
-                            public void onSuccess(FirebaseVisionText firebaseVisionText) {
-                                String s = firebaseVisionText.getText();
-                                String plat[] = s.split("\\r?\\n");
-
-                                tv.setText(plat[0]);
-
-                                String nopol = plat[0];
-
-                                wv.loadUrl("http://103.146.203.95/pajak/pkb.php?nopol=" + nopol);
-                            }
-                        });
-                        task.addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-                            }
-                        });
-                    }
-                }
+        if(requestCode == 1){
+            File file = new File(Environment.getExternalStorageDirectory()+File.separator + "img.jpg");
+            try {
+                cropCapturedImage(Uri.fromFile(file));
             }
-    );
+            catch(ActivityNotFoundException aNFE){
+                String errorMessage = "Sorry - your device doesn't support the crop action!";
+                Toast toast = Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT);
+                toast.show();
+            }
+        }
+        if(requestCode == 2){
+            Bundle extras = data.getExtras();
+            bitmap = (Bitmap) extras.get("data");
+            Bitmap thePic = extras.getParcelable("data");
+            iv.setImageBitmap(thePic);
+
+            FirebaseVisionImage firebaseVisionImage = FirebaseVisionImage.fromBitmap(thePic);
+            FirebaseVision firebaseVision = FirebaseVision.getInstance();
+            FirebaseVisionTextRecognizer firebaseVisionTextRecognizer = firebaseVision.getOnDeviceTextRecognizer();
+
+            Task<FirebaseVisionText> task = firebaseVisionTextRecognizer.processImage(firebaseVisionImage);
+
+            task.addOnSuccessListener(new OnSuccessListener<FirebaseVisionText>() {
+                @Override
+                public void onSuccess(FirebaseVisionText firebaseVisionText) {
+                    String s = firebaseVisionText.getText();
+                    String plat[] = s.split("\\r?\\n");
+
+                    tv.setText(plat[0]);
+
+                    String nopol = plat[0];
+
+                    wv.loadUrl("http://103.146.203.95/pajak/pkb.php?nopol=" + nopol);
+                }
+            });
+            task.addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
+        }
+    }
+
+    public void cropCapturedImage(Uri picUri){
+        Intent cropIntent = new Intent("com.android.camera.action.CROP");
+
+        cropIntent.setDataAndType(picUri, "image/*");
+        cropIntent.putExtra("crop", "true");
+
+        cropIntent.putExtra("aspectX", 3.25);
+        cropIntent.putExtra("aspectY", 1);
+
+        cropIntent.putExtra("outputX", 260);
+        cropIntent.putExtra("outputY", 80);
+
+        cropIntent.putExtra("return-data", true);
+
+        startActivityForResult(cropIntent, 2);
+    }
 
     public String BitMapToString() {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -163,11 +173,13 @@ public class CaptureActivity extends AppCompatActivity {
             public void onResponse(@NonNull Call<ImgRes> call, @NonNull Response<ImgRes> response) {
                 ImgRes imgRes = response.body();
                 assert imgRes != null;
+                Toast.makeText(getBaseContext(),""+imgRes.getResponse(),Toast.LENGTH_LONG).show();
                 Log.d("Server Response",""+imgRes.getResponse());
             }
 
             @Override
             public void onFailure(@NonNull Call<ImgRes> call, @NonNull Throwable t) {
+                Toast.makeText(getBaseContext(),""+t.toString(),Toast.LENGTH_LONG).show();
                 Log.d("Server Response",""+t.toString());
             }
         });
