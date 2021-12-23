@@ -10,7 +10,14 @@ public class ImgRes {
     @SerializedName("response")
     private String Response;
 
+    @SerializedName("nopol")
+    private String nopol;
+
     public String getResponse() {
         return Response;
+    }
+
+    public String getNopol() {
+        return nopol;
     }
 }

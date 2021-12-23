@@ -26,19 +26,13 @@ import androidx.core.content.ContextCompat;
 
 import com.github.clans.fab.FloatingActionMenu;
 import com.github.clans.fab.FloatingActionButton;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.ml.vision.FirebaseVision;
-import com.google.firebase.ml.vision.common.FirebaseVisionImage;
-import com.google.firebase.ml.vision.text.FirebaseVisionText;
-import com.google.firebase.ml.vision.text.FirebaseVisionTextRecognizer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import retrofit2.Call;
@@ -53,7 +47,7 @@ public class CaptureActivity extends AppCompatActivity {
     WebView wv;
 
     FloatingActionMenu materialDesignFAM;
-    FloatingActionButton floatingActionButton1, floatingActionButton2, floatingActionButton3;
+    FloatingActionButton floatingActionButton1, floatingActionButton3;
 
     public static final int REQUEST_ID_MULTIPLE_PERMISSIONS= 7;
 
@@ -68,7 +62,6 @@ public class CaptureActivity extends AppCompatActivity {
         wv = findViewById(R.id.webView);
         materialDesignFAM = (FloatingActionMenu) findViewById(R.id.material_design_android_floating_action_menu);
         floatingActionButton1 = (FloatingActionButton) findViewById(R.id.material_design_floating_action_menu_item1);
-        floatingActionButton2 = (FloatingActionButton) findViewById(R.id.material_design_floating_action_menu_item2);
         floatingActionButton3 = (FloatingActionButton) findViewById(R.id.material_design_floating_action_menu_item3);
 
         floatingActionButton1.setOnClickListener(view -> {
@@ -76,14 +69,6 @@ public class CaptureActivity extends AppCompatActivity {
             File file = new File(Environment.getExternalStorageDirectory()+ File.separator + "img.jpg");
             intent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(file));
             startActivityForResult(intent, 1);
-        });
-
-        floatingActionButton2.setOnClickListener(view -> {
-            try {
-                uploadToServer();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
         });
 
         floatingActionButton3.setOnClickListener(view -> finish());
@@ -111,31 +96,12 @@ public class CaptureActivity extends AppCompatActivity {
             Bitmap thePic = extras.getParcelable("data");
             iv.setImageBitmap(thePic);
 
-            FirebaseVisionImage firebaseVisionImage = FirebaseVisionImage.fromBitmap(thePic);
-            FirebaseVision firebaseVision = FirebaseVision.getInstance();
-            FirebaseVisionTextRecognizer firebaseVisionTextRecognizer = firebaseVision.getOnDeviceTextRecognizer();
+            try {
+                uploadToServer();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
-            Task<FirebaseVisionText> task = firebaseVisionTextRecognizer.processImage(firebaseVisionImage);
-
-            task.addOnSuccessListener(new OnSuccessListener<FirebaseVisionText>() {
-                @Override
-                public void onSuccess(FirebaseVisionText firebaseVisionText) {
-                    String s = firebaseVisionText.getText();
-                    String plat[] = s.split("\\r?\\n");
-
-                    tv.setText(plat[0]);
-
-                    String nopol = plat[0];
-
-                    wv.loadUrl("http://103.146.203.95/pajak/pkb.php?nopol=" + nopol);
-                }
-            });
-            task.addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-                }
-            });
         }
     }
 
@@ -145,11 +111,11 @@ public class CaptureActivity extends AppCompatActivity {
         cropIntent.setDataAndType(picUri, "image/*");
         cropIntent.putExtra("crop", "true");
 
-        cropIntent.putExtra("aspectX", 3.25);
+        cropIntent.putExtra("aspectX", 1);
         cropIntent.putExtra("aspectY", 1);
 
-        cropIntent.putExtra("outputX", 260);
-        cropIntent.putExtra("outputY", 80);
+        cropIntent.putExtra("outputX", 256);
+        cropIntent.putExtra("outputY", 256);
 
         cropIntent.putExtra("return-data", true);
 
@@ -173,7 +139,11 @@ public class CaptureActivity extends AppCompatActivity {
             public void onResponse(@NonNull Call<ImgRes> call, @NonNull Response<ImgRes> response) {
                 ImgRes imgRes = response.body();
                 assert imgRes != null;
-                Toast.makeText(getBaseContext(),""+imgRes.getResponse(),Toast.LENGTH_LONG).show();
+                Toast.makeText(getApplicationContext(), ""+imgRes.getResponse(), Toast.LENGTH_LONG).show();
+                String nopol = imgRes.getNopol();
+                nopol.toUpperCase(Locale.ROOT);
+                tv.setText(nopol);
+                wv.loadUrl("https://103.146.203.95/pajak/pkb.php?nopol=" + nopol);
                 Log.d("Server Response",""+imgRes.getResponse());
             }
 
