@@ -32,7 +32,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import retrofit2.Call;
@@ -141,8 +140,7 @@ public class CaptureActivity extends AppCompatActivity {
                 assert imgRes != null;
                 Toast.makeText(getApplicationContext(), ""+imgRes.getResponse(), Toast.LENGTH_LONG).show();
                 String nopol = imgRes.getNopol();
-                nopol.toUpperCase(Locale.ROOT);
-                tv.setText(nopol);
+                tv.setText(nopol.toUpperCase());
                 wv.loadUrl("https://103.146.203.95/pajak/pkb.php?nopol=" + nopol);
                 Log.d("Server Response",""+imgRes.getResponse());
             }
